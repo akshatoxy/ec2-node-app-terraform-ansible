@@ -1,0 +1,54 @@
+---
+- name: Install packages
+  hosts: all
+  become: yes
+  gather_facts: no
+  vars:
+    - ansible_python_interpreter: /usr/bin/python
+  tasks:
+    - name: Install docker and pip
+      yum:
+        name: 
+          - python3-pip
+          - docker
+        update_cache: yes
+        state: present
+    - name: Install Docker-compose
+      get_url: 
+        url: https://github.com/docker/compose/releases/download/1.27.4/docker-compose-Linux-{{lookup('pipe', 'uname -m')}}
+        dest: /usr/local/bin/docker-compose
+        mode: +x
+    - name: Install docker python module
+      pip:
+        name: 
+          - docker
+          - docker-compose
+        executable: pip3
+    - name: Start docker daemon
+      systemd:
+        name: docker
+        state: started    
+
+- name: Add ec2-user to docker group
+  hosts: all
+  become: yes
+  tasks: 
+    - name: Add ec2-user to docker group
+      user:
+        name: ec2-user
+        groups: docker
+        append: yes
+    - name: Reconnect to server session
+      meta: reset_connection
+
+- name: Start docker containers
+  hosts: all
+  tasks:
+    - name: Copy docker compose
+      copy:
+        src: /home/ec2-user/ec2-node-app-terraform-ansible/ansible/docker-compose.yaml
+        dest: /home/ec2-user/docker-compose.yaml
+    - name: Start containers using compose
+      docker_compose:
+        project_src: /home/ec2-user/
+        state: present
