@@ -18,4 +18,4 @@
 
     `terraform apply`
     
-## Note: Make sure you have installed terraform and ansible locally.
+## Note: Make sure you have installed `Terraform` and `Ansible` locally.
